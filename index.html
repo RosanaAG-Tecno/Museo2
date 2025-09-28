@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Visor móvil — Teachable Machine (Imagen)</title>
-  <meta name="theme-color" content="#111827" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<title>Visor móvil — Teachable Machine (Imagen)</title>
+<meta content="#111827" name="theme-color"/>
+<style>
     :root { --bg:#0b1220; --fg:#f8fafc; --muted:#9aa4b2; --card:#111827; --accent:#22c55e; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: linear-gradient(180deg,#0b1220 0%, #0e1726 40%, #0b1220 100%); color: var(--fg); }
@@ -28,47 +29,43 @@
     input[type="text"] { flex:1; padding:12px; border-radius:12px; background:#0f172a; color:var(--fg); border:1px solid rgba(255,255,255,0.12); }
     footer { text-align:center; color:var(--muted); font-size:12px; padding:16px; }
   </style>
-  <!-- Teachable Machine: librería de imagenes -->
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+<!-- Teachable Machine: librería de imagenes -->
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
-  <header>
-    <span class="badge">Teachable Machine · Imagen</span>
-    <h1>Visor móvil</h1>
-  </header>
-  <main class="grid">
-    <section class="card">
-      <div class="field" style="margin-bottom:10px">
-        <input id="modelUrl" type="text" placeholder="Pega aquí la URL del modelo (termina en /model.json)" />
-        <button id="loadBtn" class="primary">Cargar modelo</button>
-      </div>
-      <p class="muted" style="margin-top:-6px">Ejemplo de formato: https://teachablemachine.withgoogle.com/models/XXXXXX/model.json</p>
-
-      <div class="row">
-        <video id="webcam" playsinline muted></video>
-      </div>
-      <div class="row">
-        <button id="startBtn">1) Activar cámara</button>
-        <button id="predictBtn" disabled>2) Empezar a predecir</button>
-        <button id="stopBtn" disabled>Detener</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2 style="margin:4px 0 8px 0; font-size:16px">Predicciones (Top 3)</h2>
-      <div id="preds" class="grid"></div>
-      <p class="muted">Consejos: buena iluminación, sujeta el móvil firme, usa la cámara trasera (modo "environment").</p>
-    </section>
-
-    <section class="card">
-      <h2 style="margin:4px 0 8px 0; font-size:16px">Subir imagen (alternativa)</h2>
-      <input id="fileInput" type="file" accept="image/*" />
-      <canvas id="preview" style="display:none"></canvas>
-      <p class="muted">Si no puedes usar la cámara, sube una imagen desde la galería.</p>
-    </section>
-  </main>
-  <footer>Funciona en HTTPS. Para iOS, toca "Activar cámara" para conceder permisos.</footer>
-
+<header>
+<span class="badge">Teachable Machine · Imagen</span>
+<h1>Visor móvil</h1>
+</header>
+<main class="grid">
+<section class="card">
+<div class="field" style="margin-bottom:10px">
+<input id="modelUrl" placeholder="Pega aquí la URL del modelo (termina en /model.json)" type="text"/>
+<button class="primary" id="loadBtn">Cargar modelo</button>
+</div>
+<p class="muted" style="margin-top:-6px">Ejemplo de formato: https://teachablemachine.withgoogle.com/models/XXXXXX/model.json</p>
+<div class="row">
+<video id="webcam" muted="" playsinline=""></video>
+</div>
+<div class="row">
+<button id="startBtn">1) Activar cámara</button>
+<button disabled="" id="predictBtn">2) Empezar a predecir</button>
+<button disabled="" id="stopBtn">Detener</button>
+</div>
+</section>
+<section class="card">
+<h2 style="margin:4px 0 8px 0; font-size:16px">Predicciones (Top 3)</h2>
+<div class="grid" id="preds"></div>
+<p class="muted">Consejos: buena iluminación, sujeta el móvil firme, usa la cámara trasera (modo "environment").</p>
+</section>
+<section class="card">
+<h2 style="margin:4px 0 8px 0; font-size:16px">Subir imagen (alternativa)</h2>
+<input accept="image/*" id="fileInput" type="file"/>
+<canvas id="preview" style="display:none"></canvas>
+<p class="muted">Si no puedes usar la cámara, sube una imagen desde la galería.</p>
+</section>
+</main>
+<footer>Funciona en HTTPS. Para iOS, toca "Activar cámara" para conceder permisos.</footer>
 <script>
   let model, maxPredictions = 0, webcamStream = null, loopId = null;
   const webcamEl = document.getElementById('webcam');
@@ -152,5 +149,39 @@
   const qModel = params.get('model');
   if(qModel){ document.getElementById('modelUrl').value = qModel; }
 </script>
-</body>
+<script>
+async function loadModelAutomatically() {
+    const URL = "https://rosanaag-tecno.github.io/Museo2/model/";
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    const model = await tmImage.load(modelURL, metadataURL);
+    const maxPredictions = model.getTotalClasses();
+
+    const webcam = new tmImage.Webcam(200, 200, true);
+    await webcam.setup();
+    await webcam.play();
+    window.requestAnimationFrame(loop);
+
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+    async function loop() {
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        let resultText = "";
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction = prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(2) + "%";
+            resultText += classPrediction + "<br>";
+        }
+        document.getElementById("label-container").innerHTML = resultText;
+    }
+}
+
+window.addEventListener("load", loadModelAutomatically);
+</script></body>
 </html>
